@@ -1,39 +1,34 @@
 const fetch = (...args) =>
 	import('node-fetch').then(({ default: fetch }) => fetch(...args))
 const { HttpError } = require('../error')
-const { isValidUrl } = require('../helpers/utils')
 const ShortUrl = require('../models/short-url-model')
+const { validURL } = require('../helpers/utils')
 
 exports.createShortUrl = async (req, res, next) => {
 	try {
 		let { url } = req.body
 
-		if (!url.startsWith('http')) url = 'https://' + url
-
-		if (!isValidUrl(url)) {
+		if (!validURL(url)) {
 			const httpError = new HttpError('Url is not valid')
 			return next(httpError)
 		}
 
-		const found = await ShortUrl.findOne({
+		if (!url.startsWith('http')) url = 'https://' + url
+
+		const urlId = new Date().getTime().toString(36)
+		const hostname = new URL(url).hostname.replace('www.', '')
+		const shortUrl = process.env.hostname + urlId
+
+		const shortUrlDocs = await new ShortUrl({
+			urlId,
 			url,
+			hostname,
+			shortUrl,
 		})
 
-		if (found) {
-			return res.status(200).json(found)
-		}
+		await shortUrlDocs.save()
 
-		const uid = new Date().getTime().toString(36)
-
-		const shortUrl = await new ShortUrl({
-			urlId: uid,
-			url,
-			shortUrl: process.env.base_url + uid,
-		})
-
-		await shortUrl.save()
-
-		res.status(200).json(shortUrl)
+		res.status(200).json(shortUrlDocs)
 	} catch (error) {
 		console.error(error)
 		const httpError = new HttpError('Creating short url failed', 500)
@@ -45,14 +40,15 @@ exports.shortUrlExpander = async (req, res, next) => {
 	try {
 		let { shortUrl } = req.body
 
-		if (!shortUrl.startsWith('http')) shortUrl = 'https://' + shortUrl
-
-		if (!isValidUrl(shortUrl)) {
+		if (!validURL(shortUrl)) {
 			const httpError = new HttpError('Short url is not valid')
 			return next(httpError)
 		}
 
+		if (!shortUrl.startsWith('http')) shortUrl = 'https://' + shortUrl
+
 		const response = await fetch(shortUrl, {
+			method: 'HEAD',
 			redirect: 'follow',
 		})
 
@@ -61,10 +57,14 @@ exports.shortUrlExpander = async (req, res, next) => {
 			return next(httpError)
 		}
 
+		const hostname = new URL(response.url).hostname.replace('www.', '')
+
 		res.status(200).json({
 			url: response.url,
+			hostname,
 		})
 	} catch (error) {
+		console.error(error)
 		const httpError = new HttpError('Expanding url failed')
 		return next(httpError)
 	}

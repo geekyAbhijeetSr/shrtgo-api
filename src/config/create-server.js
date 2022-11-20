@@ -6,7 +6,7 @@ const createServer = () => {
 
     server.use(express.json())
     server.use(cors({
-        origin: ['http://loclahost:3000']
+        origin: ['http://localhost:3000']
     }))
 
     return server

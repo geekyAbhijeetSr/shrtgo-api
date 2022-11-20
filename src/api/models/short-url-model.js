@@ -8,9 +8,11 @@ const shortUrlSchema = mongoose.Schema({
         type: String,
         trim: true
     }, 
+    hostname: {
+        type: String,
+    },
     shortUrl: {
         type: String,
-        trim: true
     },
     noOfClicks: {
         type: Number,

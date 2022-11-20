@@ -14,9 +14,7 @@ exports.redirectUrl = async (req, res, next) => {
 			await found.save()
 			res.redirect(found.url)
 		} else {
-			res.status(404).json({
-				error: 'Url not found!',
-			})
+			res.status(404).send('( ˘︹˘ ) Oops! URL not found')
 		}
 	} catch (error) {
 		console.error(error)
