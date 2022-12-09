@@ -1,6 +1,7 @@
 const fetch = (...args) =>
 	import('node-fetch').then(({ default: fetch }) => fetch(...args))
 const { HttpError } = require('../error')
+const { nanoid } = require('nanoid')
 const ShortUrl = require('../models/short-url-model')
 const { validURL } = require('../helpers/utils')
 
@@ -15,7 +16,7 @@ exports.createShortUrl = async (req, res, next) => {
 
 		if (!url.startsWith('http')) url = 'https://' + url
 
-		const urlId = new Date().getTime().toString(36)
+		const urlId = nanoid(5)
 		const hostname = new URL(url).hostname.replace('www.', '')
 		const shortUrl = process.env.hostname + urlId
 
