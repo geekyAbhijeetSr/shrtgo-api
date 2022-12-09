@@ -7,7 +7,7 @@ const createServer = () => {
     server.use(express.json())
     server.use(
 			cors({
-				origin: ['https://shrtgo.netlify.app'],
+				origin: ['https://shrtgo.netlify.app', process.env.URI],
 			})
 		)
 
